@@ -1,0 +1,60 @@
+name: macos-precompile
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  mix_compile:
+    runs-on: macos-11
+    env:
+      OPENCV_VER: "4.6.0"
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - pair:
+              arch: x86_64
+              arch_name: x86_64
+          - pair:
+              arch: arm64
+              arch_name: aarch64
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Cache OpenCV Source Code
+        id: cache-opencv
+        uses: actions/cache@v3
+        with:
+          key: opencv-${{ env.OPENCV_VER }}
+          path: |
+            ./src/cache
+            ./src/opencv
+
+      - name: Create precompiled archive
+        if: steps.cache-mix-compile.outputs.cache-hit != 'true'
+        run: |
+          if [ "${{ matrix.pair.arch }}" = "arm64" ]; then
+            export CMAKE_OPENCV_OPTIONS="-D WITH_IPP=OFF -D CMAKE_OSX_ARCHITECTURES=arm64"
+            export CMAKE_EVISION_OPTIONS="-D CMAKE_OSX_ARCHITECTURES=arm64"
+          fi
+          echo "CMAKE_TOOLCHAIN_FILE: ${CMAKE_TOOLCHAIN_FILE}"
+          DEFAULT_JOBS=`nproc` make
+
+      - name: Create precompiled archive
+        run: |
+          export PKG_NAME=opencv_${{ matrix.pair.arch }}-${GITHUB_REF##*/v}
+          tar -czf "${PKG_NAME}.tar.gz" "precompiled"
+          ls -lah "${PKG_NAME}.tar.gz"
+          mkdir -p artifacts
+          mv "${PKG_NAME}.tar.gz" artifacts
+
+      - uses: softprops/action-gh-release@v1
+        with:
+          files: artifacts/*.tar.gz
