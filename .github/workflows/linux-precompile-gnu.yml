@@ -12,6 +12,8 @@ concurrency:
 jobs:
   mix_compile:
     runs-on: ubuntu-20.04
+    env:
+      OPENCV_VER: "4.6.0"
     strategy:
       fail-fast: false
       matrix:
