@@ -39,7 +39,10 @@ CONFIGURATION_PRIVATE_HPP_OUT = $(PRECOMPILED_DIR)/configuration.private.hpp
 build: $(HEADERS_TXT_OUT)
 	@echo > /dev/null
 
-$(CONFIGURATION_PRIVATE_HPP_OUT):
+$(OPENCV_CONFIGURATION_PRIVATE_HPP):
+	@ scripts/download_opencv.sh ${OPENCV_VER} src/cache src/opencv/
+
+$(CONFIGURATION_PRIVATE_HPP_OUT): $(OPENCV_CONFIGURATION_PRIVATE_HPP)
 	@ mkdir -p "$(PRECOMPILED_DIR)"
 	@ cp "$(OPENCV_CONFIGURATION_PRIVATE_HPP)" "$(CONFIGURATION_PRIVATE_HPP_OUT)"
 
@@ -74,4 +77,4 @@ $(HEADERS_TXT_OUT): $(HEADERS_TXT)
 		gsed -i 's#$(OPENCV_DIR)/modules/#precompiled/include/opencv4/opencv2/#g' "$(HEADERS_TXT_OUT)" ; \
 	else \
 		sed -i 's#$(OPENCV_DIR)/modules/#precompiled/include/opencv4/opencv2/#g' "$(HEADERS_TXT_OUT)" ; \
-	endif
+	fi
