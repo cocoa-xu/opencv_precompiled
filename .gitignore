@@ -1,0 +1,6 @@
+.DS_Store
+cmake_opencv_*/
+precompiled/
+src/cache/
+src/opencv/
+
