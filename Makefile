@@ -40,7 +40,7 @@ build: $(HEADERS_TXT_OUT)
 	@echo > /dev/null
 
 $(OPENCV_CONFIGURATION_PRIVATE_HPP):
-	@ scripts/download_opencv.sh ${OPENCV_VER} src/cache src/opencv/
+	@ scripts/download_opencv.sh $(OPENCV_VER) src/cache src/opencv/
 
 $(CONFIGURATION_PRIVATE_HPP_OUT): $(OPENCV_CONFIGURATION_PRIVATE_HPP)
 	@ mkdir -p "$(PRECOMPILED_DIR)"
