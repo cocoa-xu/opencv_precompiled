@@ -10,7 +10,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  mix_compile:
+  compile:
     runs-on: ubuntu-20.04
     env:
       OPENCV_VER: "4.6.0"
@@ -89,8 +89,6 @@ jobs:
             export CMAKE_TOOLCHAIN_FILE="$(pwd)/${{ matrix.pair.cmake_toolchain_file }}"
           fi
           echo "CMAKE_TOOLCHAIN_FILE: ${CMAKE_TOOLCHAIN_FILE}"
-          mkdir -p build
-          cd build
           DEFAULT_JOBS=`nproc` make
 
       - name: Create precompiled archive
