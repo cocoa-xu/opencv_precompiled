@@ -75,9 +75,9 @@ $(HEADERS_TXT): $(CONFIGURATION_PRIVATE_HPP_OUT)
 	make install
 
 $(HEADERS_TXT_OUT): $(HEADERS_TXT)
-	@ cp "$(HEADERS_TXT)" "$(HEADERS_TXT_OUT)"
 	@ if [ -x "$(which gsed)" ]; then \
+		cp "$(HEADERS_TXT)" "$(HEADERS_TXT_OUT)" ; \
 		gsed -i 's#$(OPENCV_DIR)/modules/#precompiled/include/opencv4/opencv2/#g' "$(HEADERS_TXT_OUT)" ; \
 	else \
-		sed -i 's#$(OPENCV_DIR)/modules/#precompiled/include/opencv4/opencv2/#g' "$(HEADERS_TXT_OUT)" ; \
+		sed 's#$(OPENCV_DIR)/modules/#precompiled/include/opencv4/opencv2/#g' "$(HEADERS_TXT)" > "$(HEADERS_TXT_OUT)" ; \
 	fi
