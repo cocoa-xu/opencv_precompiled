@@ -6,6 +6,8 @@ CMAKE_BUILD_TYPE ?= Release
 OPENCV_VER ?= 4.6.0
 OPENCV_ROOT_DIR = $(shell pwd)/src/opencv
 OPENCV_DIR = $(OPENCV_ROOT_DIR)/opencv-$(OPENCV_VER)
+OPENCV_CONTRIB_VER ?= 4.6.0
+OPENCV_CONTRIB_DIR = $(OPENCV_ROOT_DIR)/opencv_contrib-$(OPENCV_CONTRIB_VER)
 OPENCV_CONFIGURATION_PRIVATE_HPP = $(OPENCV_DIR)/modules/core/include/opencv2/core/utils/configuration.private.hpp
 PYTHON3_EXECUTABLE = $(shell which python3)
 CMAKE_OPENCV_BUILD_DIR = $(shell pwd)/cmake_opencv_$(OPENCV_VER)
@@ -27,6 +29,12 @@ CMAKE_OPTIONS += $(CMAKE_CONFIGURE_FLAGS) $(CMAKE_OPENCV_OPTIONS)
 ifdef TARGET_GCC_FLAGS
     CMAKE_OPTIONS += -DCMAKE_CXX_FLAGS="$(TARGET_GCC_FLAGS)" -DCMAKE_C_FLAGS="$(TARGET_GCC_FLAGS)"
 endif
+
+ENABLE_CV_CONTRIB ?= true
+ifeq ($(ENABLE_CV_CONTRIB),true)
+	CMAKE_OPTIONS += -DOPENCV_EXTRA_MODULES_PATH="$(OPENCV_CONTRIB_DIR)/modules"
+endif
+
 ENABLED_CV_MODULES ?= ""
 # precompiled binaries
 PRECOMPILED_DIR ?= $(shell pwd)/precompiled
@@ -39,7 +47,12 @@ CONFIGURATION_PRIVATE_HPP_OUT = $(PRECOMPILED_DIR)/configuration.private.hpp
 build: $(HEADERS_TXT_OUT)
 	@echo > /dev/null
 
-$(OPENCV_CONFIGURATION_PRIVATE_HPP):
+download_opencv_contrib:
+	@ if [ "$(ENABLE_CV_CONTRIB)" = "true" ]; then \
+		scripts/download_opencv_contrib.sh $(OPENCV_VER) src/cache src/opencv/ ; \
+	fi
+
+$(OPENCV_CONFIGURATION_PRIVATE_HPP): download_opencv_contrib
 	@ scripts/download_opencv.sh $(OPENCV_VER) src/cache src/opencv/
 
 $(CONFIGURATION_PRIVATE_HPP_OUT): $(OPENCV_CONFIGURATION_PRIVATE_HPP)
