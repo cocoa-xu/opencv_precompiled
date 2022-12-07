@@ -40,8 +40,9 @@ jobs:
       - name: Compile OpenCV
         if: steps.cache-mix-compile.outputs.cache-hit != 'true'
         run: |
+          export CMAKE_OPENCV_OPTIONS="-D WITH_FFMPEG=OFF -D BUILD_opencv_hdf=OFF -D BUILD_opencv_freetype=OFF"
           if [ "${{ matrix.pair.arch }}" = "arm64" ]; then
-            export CMAKE_OPENCV_OPTIONS="-D WITH_IPP=OFF -D CMAKE_OSX_ARCHITECTURES=arm64"
+            export CMAKE_OPENCV_OPTIONS="${CMAKE_OPENCV_OPTIONS} -D WITH_IPP=OFF -D CMAKE_OSX_ARCHITECTURES=arm64"
           fi
           make
 
