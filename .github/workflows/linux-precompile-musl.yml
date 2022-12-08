@@ -1,0 +1,102 @@
+name: linux-precompile-musl
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  alpine:
+    runs-on: ubuntu-20.04
+    container: alpine:latest
+    env:
+      OPENCV_VER: "4.6.0"
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install system dependencies
+        run: |
+          apk add cmake make python3 bash curl unzip gcc g++ ncurses-dev openssl-dev linux-headers perl git dpkg patch
+
+      - name: Cache OpenCV Source Code
+        id: cache-opencv
+        uses: actions/cache@v3
+        with:
+          key: opencv-with-contrib-${{ env.OPENCV_VER }}
+          path: |
+            ./src/cache
+            ./src/opencv
+
+      - name: Compile
+        run: |
+          if [ "${{ matrix.pair.cmake_toolchain_file }}" != "" ]; then
+            export CMAKE_TOOLCHAIN_FILE="$(pwd)/${{ matrix.pair.cmake_toolchain_file }}"
+          fi
+          echo "CMAKE_TOOLCHAIN_FILE: ${CMAKE_TOOLCHAIN_FILE}"
+          DEFAULT_JOBS=`nproc` make
+
+      - name: Create precompiled archive
+        run: |
+          export PKG_NAME=opencv_x86_64-linux-musl-${GITHUB_REF##*/v}
+          tar -czf "${PKG_NAME}.tar.gz" "precompiled"
+          ls -lah "${PKG_NAME}.tar.gz"
+          mkdir -p artifacts
+          mv "${PKG_NAME}.tar.gz" artifacts
+
+      - uses: softprops/action-gh-release@v1
+        with:
+          files: artifacts/*.tar.gz
+
+  zig_build:
+    runs-on: ubuntu-20.04
+    env:
+      OPENCV_VER: "4.6.0"
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [aarch64-linux-musl, riscv64-linux-musl]
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install Zig
+        uses: goto-bus-stop/setup-zig@v1
+        with:
+          version: ${{ env.ZIG_VERSION }}
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential automake autoconf pkg-config bc m4 unzip zip curl git libssl-dev gzip libncurses5-dev python3 ca-certificates
+
+      - name: Cache OpenCV Source Code
+        id: cache-opencv
+        uses: actions/cache@v3
+        with:
+          key: opencv-with-contrib-${{ env.OPENCV_VER }}
+          path: |
+            ./src/cache
+            ./src/opencv
+
+      - name: Compile
+        if: steps.cache-mix-compile.outputs.cache-hit != 'true'
+        run: |
+          export CMAKE_TOOLCHAIN_FILE="$(pwd)/cc_toolchain/${{ matrix.arch }}.cmake"
+          echo "CMAKE_TOOLCHAIN_FILE: ${CMAKE_TOOLCHAIN_FILE}"
+          export ZIG_TOOLCHAIN_PATH="$(which zig)"
+          DEFAULT_JOBS=`nproc` make
+
+      - name: Create precompiled archive
+        run: |
+          export PKG_NAME=opencv_${{ matrix.arch }}-${GITHUB_REF##*/v}
+          tar -czf "${PKG_NAME}.tar.gz" "precompiled"
+          ls -lah "${PKG_NAME}.tar.gz"
+          mkdir -p artifacts
+          mv "${PKG_NAME}.tar.gz" artifacts
+
+      - uses: softprops/action-gh-release@v1
+        with:
+          files: artifacts/*.tar.gz
