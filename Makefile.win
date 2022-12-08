@@ -109,15 +109,13 @@ CMAKE_BUILD_PARAMETER= --config "$(CMAKE_BUILD_TYPE)"
 
 build: $(EVISION_SO)
 
-download_opencv_contrib: 
-!IF "$(ENABLE_CV_CONTRIB)" == "true"
-	@ powershell scripts/download_opencv_contrib.ps1 "$(OPENCV_VER)" "$(OPENCV_CACHE_DIR)" "$(OPENCV_ROOT_DIR)"
-!ENDIF
-
-$(CONFIGURATION_PRIVATE_HPP): download_opencv_contrib
+$(CONFIGURATION_PRIVATE_HPP):
 !IF "$(EVISION_PREFER_PRECOMPILED)" != "true"
 	@ powershell scripts/download_opencv.ps1 "$(OPENCV_VER)" "$(OPENCV_CACHE_DIR)" "$(OPENCV_ROOT_DIR)"
 	@ copy "$(OPENCV_CONFIGURATION_PRIVATE_HPP)" "$(CONFIGURATION_PRIVATE_HPP)"
+!IF "$(ENABLE_CV_CONTRIB)" == "true"
+	@ powershell scripts/download_opencv_contrib.ps1 "$(OPENCV_CONTRIB_VER)" "$(OPENCV_CACHE_DIR)" "$(OPENCV_ROOT_DIR)"
+!ENDIF
 !ENDIF
 
 $(HEADERS_TXT): $(CONFIGURATION_PRIVATE_HPP)
