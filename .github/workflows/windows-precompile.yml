@@ -59,7 +59,7 @@ jobs:
             export TOOLCHAIN_FILE="$(pwd)/${{ matrix.pair.CMAKE_TOOLCHAIN_FILE }}"
           fi
           echo "CMAKE_TOOLCHAIN_FILE: ${CMAKE_TOOLCHAIN_FILE}"
-          nmake
+          nmake -f Makefile.win
 
       - name: Create precompiled archive
         shell: bash
